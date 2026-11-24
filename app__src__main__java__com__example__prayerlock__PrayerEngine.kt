@@ -76,9 +76,13 @@ object PrayerEngine {
             val best = lm.getProviders(true).mapNotNull { lm.getLastKnownLocation(it) }.maxByOrNull { it.time }
             if (best != null) { save(best); return }
             val prov = lm.getProviders(true).firstOrNull() ?: return
-            LocationManagerCompat.getCurrentLocation(lm, prov, null, ContextCompat.getMainExecutor(ctx)) { l ->
-                if (l != null) { save(l); Scheduler.scheduleNext(ctx) }
-            }
+           val noCancel: android.os.CancellationSignal? = null
+LocationManagerCompat.getCurrentLocation(
+    lm, prov, noCancel, ContextCompat.getMainExecutor(ctx),
+    androidx.core.util.Consumer<Location> { l ->
+        if (l != null) { save(l); Scheduler.scheduleNext(ctx) }
+    }
+)
         } catch (_: Exception) { }
     }
 }
